@@ -1,57 +1,66 @@
 from pylab import *
 from scipy.io import wavfile
 from pydub import AudioSegment as AS
-import subprocess
-import os
+import numpy as np
+from numpy.fft.fftpack import fft as fourier_transform, ifft as inv_fourier_transform
+import time
 
 
-def change_to_wav(filename, out_filename):
-    AS.from_mp3(filename).export(format='wav', out_f=open(out_filename, 'wb'))
+def change_to_wav(filename):
+    out_file = filename + '.wav'
+    AS.from_mp3(filename).export(format='wav', out_f=open(out_file, 'wb'))
+    return out_file
+
+
+def timing(f):
+    def wrap(*args):
+        print('%s function start' % (f.__name__,))
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        elapse = (time2 - time1) * 1000.0
+        seconds = elapse / 1000
+        millis = elapse % 1000
+        print('%s function elapse %i sec %i ms' % (f.__name__, seconds, millis))
+        return ret
+
+    return wrap
+
+
+@timing
+def read_wav(file):
+    return wavfile.read(file)
+
+
+@timing
+def fourier(sound):
+    return fourier_transform(sound)
+
+
+@timing
+def inv_fourier(array):
+    return inv_fourier_transform(array)
 
 
 def process_wav_file(file):
-    freq, sound = wavfile.read(file)
-    print(sound.shape)
-    print(sound.dtype)
-    timeArray = arange(0, 100000, 1)
-    timeArray = timeArray / freq
-    timeArray = timeArray / 1000  # scale to milliseconds
+    freq, sound = read_wav(file)
 
-    plot(timeArray, sound[0:100000], color='k')
-    ylabel('Amplitude')
-    xlabel('Time (ms)')
+    p = fourier(sound)
 
-    s1 = sound
-    n = len(s1)
-    p = fft(s1)  # take the fourier transform
+    new_sound = inv_fourier(p)
 
-    nUniquePts = int(ceil((n + 1) / 2.0))
-    p = p[0:nUniquePts]
-    p = abs(p)
+    np.set_printoptions(edgeitems=10000)
 
-    p = p / float(n)  # scale by the number of points so that
-    # the magnitude does not depend on the length
-    # of the signal or on its sampling frequency
-    p = p ** 2  # square it to get the power
-
-    # multiply by two (see technical document for details)
-    # odd nfft excludes Nyquist point
-    if n % 2 > 0:  # we've got odd number of points fft
-        p[1:len(p)] = p[1:len(p)] * 2
-    else:
-        p[1:len(p) - 1] = p[1:len(p) - 1] * 2  # we've got even number of points fft
-
-    freqArray = arange(0, nUniquePts, 1.0) * (freq / n)
-    plot(freqArray / 1000, 10 * log10(p), color='k')
-    xlabel('Frequency (kHz)')
-    ylabel('Power (dB)')
+    print(sound)
+    print(p)
+    print(new_sound)
 
 
 def main():
-    file = "C:/Users/admin/PycharmProjects/SoundFilter/SoundPreprocess/TestFiles/guitar_orig.mp3"
-    out_file = file + '.wav'
-    change_to_wav(file, out_file)
-    process_wav_file(out_file)
+    file = "C:/Users/admin/PycharmProjects/SoundFilter/SoundPreprocess/TestFiles/guitar_original.mp3.wav"
+    if file.endswith('.mp3'):
+        file = change_to_wav(file)
+    process_wav_file(file)
 
 
 if __name__ == '__main__':
