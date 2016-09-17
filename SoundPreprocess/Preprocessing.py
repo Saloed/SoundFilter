@@ -7,9 +7,22 @@ from scipy.io import wavfile
 
 from Utils.Wrappers import timing
 
+
+class ComplexArray:
+    def __init__(self, complex_number):
+        self.real = np.real(complex_number)
+        self.imagine = np.imag(complex_number)
+
+    def to_complex(self):
+        return self.real + 1j * self.imagine
+
+    def __str__(self):
+        return "{0} + {1}j".format(self.real, self.imagine)
+
+
 ParsedSound = namedtuple('ParsedSound', ['sound_name', 'sound', 'freq', 'part_size'])
 SOUND_FILES_DIR = 'TestFiles/'
-SOUND_PART_LEN = 50  # 0.02 sec
+SOUND_PART_LEN = 10  # 0.004 sec = 4 ms
 
 
 def change_to_wav(filename):
@@ -22,18 +35,20 @@ def change_to_wav(filename):
 
 @timing
 def make_partition(sound, freq):
-    num_parts = freq // 2 // SOUND_PART_LEN
+    num_parts = freq // (2 * SOUND_PART_LEN)
     sound_len = len(sound)
     part_size = sound_len // num_parts
     new_len = sound_len - sound_len % num_parts
     new_sound = sound[:new_len]
     new_sound = fourier_transform(new_sound, axis=0)
-    partition = [new_sound[i * part_size:(i + 1) * part_size] for i in range(num_parts)]
+    partition = [ComplexArray(new_sound[i * part_size:(i + 1) * part_size]) for i in range(num_parts)]
     return partition, part_size
 
 
 @timing
-def collapse(sound_parts):
+def collapse(sound_parts: list):
+    for i, part in enumerate(sound_parts):
+        sound_parts[i] = part.to_complex()
     new_sound = np.concatenate(sound_parts)
     new_sound = inv_fourier_transform(new_sound, axis=0)
     return new_sound

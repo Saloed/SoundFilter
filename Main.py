@@ -8,9 +8,11 @@ theano.config.mode = 'FAST_COMPILE'
 
 
 def main():
+    # garbage collection for lowing memory usage
+    gc.enable()
+
     learn_1 = "Glockenspiel.wav"
     learn_2 = "Xylophone.wav"
-    gc.enable()
     learn_1_ps = process_wav_file(learn_1)
     learn_2_ps = process_wav_file(learn_2)
 
@@ -20,8 +22,10 @@ def main():
         raise Exception("Learn sounds lengths are different")
 
     part_size = learn_1_ps.part_size
-    parameters = Parameters(in_out_size=part_size, hidden_size=part_size + part_size // 2, learn_rate=0.025)
+    parameters = Parameters(in_out_size=part_size, learn_rate=0.025)
     train(parameters, learn_1_ps, learn_2_ps)
+
+    # write_wav_file(learn_1_ps)
 
 
 if __name__ == '__main__':

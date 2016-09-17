@@ -1,6 +1,11 @@
 class Parameters:
-    def __init__(self, in_out_size, hidden_size, learn_rate, weights: dict = None, biases: dict = None):
-        self.hidden_size = hidden_size
+    def __init__(self, in_out_size, learn_rate, weights=None, biases=None):
+        if weights is None:
+            weights = {}
+        if biases is None:
+            biases = {}
+
+        self.hidden_size = in_out_size * 2
         self.in_out_size = in_out_size
         self.weights = weights
         self.biases = biases

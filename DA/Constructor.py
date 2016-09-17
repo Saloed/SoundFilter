@@ -7,24 +7,36 @@ from Utils.Wrappers import timing
 
 @timing
 def construct(params: Parameters, is_learn, is_validation):
-    input = T.zvector('in')
-    target = T.zvector('target')
-    in_layer = T.nnet.sigmoid(T.dot(input, params.weights['w_in']) + params.biases['b_in'])
-    h_layer = T.nnet.sigmoid(T.dot(in_layer, params.weights['w_h']) + params.biases['b_h'])
-    out_layer = T.nnet.sigmoid(T.dot(h_layer, params.weights['w_out']) + params.biases['b_out'])
+    real_input = T.dvector('r_in')
+    imag_input = T.dvector('i_in')
+    real_target = T.dvector('r_tar')
+    imag_target = T.dvector('i_tar')
 
-    cost = T.nnet.categorical_crossentropy(out_layer, target)
+    r_in_layer = T.nnet.sigmoid(T.dot(real_input, params.weights['w_r_in']) + params.biases['b_r_in'])
+    i_in_layer = T.nnet.sigmoid(T.dot(imag_input, params.weights['w_i_in']) + params.biases['b_i_in'])
+
+    h_layer = T.nnet.sigmoid(
+        T.dot(T.concatenate([r_in_layer, i_in_layer]), params.weights['w_h']) + params.biases['b_h'])
+
+    r_out_layer = T.nnet.sigmoid(T.dot(h_layer, params.weights['w_r_out']) + params.biases['b_r_out'])
+    i_out_layer = T.nnet.sigmoid(T.dot(h_layer, params.weights['w_i_out']) + params.biases['b_i_out'])
+
+    cost_r = T.std(r_out_layer - real_target)
+    cost_i = T.std(i_out_layer - imag_target)
+    cost = T.sqrt(T.sqr(cost_r) + T.sqr(cost_i))
 
     if is_learn:
         if not is_validation:
-            upd_params = params.weights.values() + params.weights.values()
+            upd_params = []
+            upd_params.extend(params.weights.values())
+            upd_params.extend(params.weights.values())
             grads = T.grad(cost, upd_params)
             updates = [
                 (param, param - params.learn_rate * gparam)
                 for param, gparam in zip(upd_params, grads)
                 ]
-            return function([input, target], outputs=cost, updates=updates)
+            return function([real_input, imag_input, real_target, imag_target], outputs=cost, updates=updates)
         else:
-            return function([input, target], outputs=cost)
+            return function([real_input, imag_input, real_target, imag_target], outputs=cost)
     else:
-        return function([input], outputs=out_layer)
+        return function([real_input, imag_input], outputs=[r_out_layer, i_out_layer])
