@@ -5,6 +5,8 @@ import theano
 import gc
 
 theano.config.mode = 'FAST_COMPILE'
+theano.config.floatX = 'float32'
+theano.config.exception_verbosity = 'high'
 
 
 def main():

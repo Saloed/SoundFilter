@@ -1,9 +1,9 @@
 from collections import namedtuple
 from copy import deepcopy
 from random import shuffle
-
+import _pickle as c_pickle
 from DA.Constructor import construct
-from DA.InitParams import initialize
+from DA.InitParams import initialize, reinit_params
 from DA.Parameters import Parameters
 from SoundPreprocess.Preprocessing import ParsedSound
 from Utils.Wrappers import timing
@@ -31,32 +31,34 @@ def epoch(batches, train_set_size, train_net, valid_net):
     train_error = 0
     train_size = len(train_set)
     valid_size = len(valid_set)
-
     for batch in train_set:
-        train_error += train_net(batch)
+        train_error += train_net(batch.input_real, batch.input_imag, batch.target_real, batch.target_imag)
     train_error /= train_size
 
     for batch in valid_set:
-        valid_error += valid_net(batch)
+        valid_error += valid_net(batch.input_real, batch.input_imag, batch.target_real, batch.target_imag)
     valid_error /= valid_size
 
     return train_error, valid_error
 
 
 @timing
-def retry(batches, params, train_set_size, train_net, valid_net):
-    params = initialize(params)
+def retry(batches, params, retry, train_set_size, train_net, valid_net):
+    # params = reinit_params(params)
     for ep in range(NUM_EPOCH):
         err = epoch(batches, train_set_size, train_net, valid_net)
         print(err)
+        if ep % 100 == 0:
+            with open('new_params_r{0}_e{1}'.format(retry, ep), 'wb') as fout:
+                c_pickle.dump(params, fout)
 
 
 @timing
 def train(params: Parameters, learn_1: ParsedSound, learn_2: ParsedSound):
     batches = create_batches(learn_1, learn_2)
     train_set_size = len(batches) // 10 * TRAIN_SET_SIZE
-    params = initialize(params)
+    # params = initialize(params)
     train_net = construct(params, True, False)
     valid_net = construct(params, True, True)
     for ret in range(NUM_RETRY):
-        retry(batches, params, train_set_size, train_net, valid_net)
+        retry(batches, params, ret, train_set_size, train_net, valid_net)

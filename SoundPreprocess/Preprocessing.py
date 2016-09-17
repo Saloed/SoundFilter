@@ -1,6 +1,7 @@
 from collections import namedtuple
 
 import numpy as np
+import theano
 from numpy.fft import rfft as fourier_transform, irfft as inv_fourier_transform
 from pydub import AudioSegment as AS
 from scipy.io import wavfile
@@ -10,8 +11,8 @@ from Utils.Wrappers import timing
 
 class ComplexArray:
     def __init__(self, complex_number):
-        self.real = np.real(complex_number)
-        self.imagine = np.imag(complex_number)
+        self.real = np.asarray(np.real(complex_number), dtype=theano.config.floatX)
+        self.imagine = np.asarray(np.imag(complex_number), dtype=theano.config.floatX)
 
     def to_complex(self):
         return self.real + 1j * self.imagine
@@ -22,7 +23,7 @@ class ComplexArray:
 
 ParsedSound = namedtuple('ParsedSound', ['sound_name', 'sound', 'freq', 'part_size'])
 SOUND_FILES_DIR = 'TestFiles/'
-SOUND_PART_LEN = 10  # 0.004 sec = 4 ms
+SOUND_PART_LEN = 50  # 0.02 sec = 20 ms
 
 
 def change_to_wav(filename):
@@ -35,23 +36,23 @@ def change_to_wav(filename):
 
 @timing
 def make_partition(sound, freq):
-    num_parts = freq // (2 * SOUND_PART_LEN)
+    part_size = freq // SOUND_PART_LEN
     sound_len = len(sound)
-    part_size = sound_len // num_parts
-    new_len = sound_len - sound_len % num_parts
+    num_parts = sound_len // part_size
+    new_len = num_parts * part_size
     new_sound = sound[:new_len]
-    new_sound = fourier_transform(new_sound, axis=0)
-    partition = [ComplexArray(new_sound[i * part_size:(i + 1) * part_size]) for i in range(num_parts)]
+    partition = [new_sound[i * part_size:(i + 1) * part_size] for i in range(num_parts)]
+    for i, part in enumerate(partition):
+        partition[i] = ComplexArray(fourier_transform(part, axis=0))
+    part_size = len(partition[0].real)
     return partition, part_size
 
 
 @timing
 def collapse(sound_parts: list):
     for i, part in enumerate(sound_parts):
-        sound_parts[i] = part.to_complex()
-    new_sound = np.concatenate(sound_parts)
-    new_sound = inv_fourier_transform(new_sound, axis=0)
-    return new_sound
+        sound_parts[i] = inv_fourier_transform(part.to_complex(), axis=0)
+    return np.concatenate(sound_parts)
 
 
 def process_wav_file(sound_name):
