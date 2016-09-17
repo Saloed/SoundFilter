@@ -2,13 +2,15 @@ from DA.Parameters import Parameters
 from DA.Train import train
 from SoundPreprocess.Preprocessing import change_to_wav, process_wav_file, write_wav_file
 import theano
+import gc
 
 theano.config.mode = 'FAST_COMPILE'
+
 
 def main():
     learn_1 = "Glockenspiel.wav"
     learn_2 = "Xylophone.wav"
-
+    gc.enable()
     learn_1_ps = process_wav_file(learn_1)
     learn_2_ps = process_wav_file(learn_2)
 
