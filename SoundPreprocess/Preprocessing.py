@@ -1,12 +1,14 @@
+from collections import namedtuple
+
 import numpy as np
 from numpy.fft import rfft as fourier_transform, irfft as inv_fourier_transform
 from pydub import AudioSegment as AS
 from scipy.io import wavfile
-from collections import namedtuple
-from SoundPreprocess.Utils.Wrappers import timing
 
-ParsedSound = namedtuple('ParsedSound', ['sound_name', 'sound', 'freq'])
-SOUND_FILES_DIR = 'SoundPreprocess/TestFiles/'
+from Utils.Wrappers import timing
+
+ParsedSound = namedtuple('ParsedSound', ['sound_name', 'sound', 'freq', 'part_size'])
+SOUND_FILES_DIR = 'TestFiles/'
 SOUND_PART_LEN = 50  # 0.02 sec
 
 
@@ -27,7 +29,7 @@ def make_partition(sound, freq):
     new_sound = sound[:new_len]
     new_sound = fourier_transform(new_sound, axis=0)
     partition = [new_sound[i * part_size:(i + 1) * part_size] for i in range(num_parts)]
-    return partition
+    return partition, part_size
 
 
 @timing
@@ -40,22 +42,10 @@ def collapse(sound_parts):
 def process_wav_file(sound_name):
     freq, sound = wavfile.read(SOUND_FILES_DIR + sound_name)
     sound = sound.T
-    new_sound = make_partition(sound, freq)
-    return ParsedSound(sound_name, new_sound, freq)
+    new_sound, part_size = make_partition(sound, freq)
+    return ParsedSound(sound_name, new_sound, freq, part_size)
 
 
 def write_wav_file(ps: ParsedSound):
     new_sound = collapse(ps.sound)
     wavfile.write(SOUND_FILES_DIR + 'test_' + ps.sound_name, ps.freq, new_sound)
-
-
-def main():
-    file = "Glockenspiel.wav"
-    if file.endswith('.mp3'):
-        file = change_to_wav(file)
-    ps = process_wav_file(file)
-    write_wav_file(ps)
-
-
-if __name__ == '__main__':
-    main()
