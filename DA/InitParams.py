@@ -1,5 +1,4 @@
 import numpy as np
-import theano
 from theano import shared
 
 from DA.Parameters import Parameters

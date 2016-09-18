@@ -1,17 +1,11 @@
-from collections import namedtuple
-from copy import deepcopy
-from random import shuffle
 import _pickle as c_pickle
-from DA.Constructor import construct
-from DA.InitParams import initialize, reinit_params
-from DA.Parameters import Parameters
-from SoundPreprocess.Preprocessing import ParsedSound
-from Utils.Wrappers import timing
+from random import shuffle
 
-Batch = namedtuple('Batch', ['input_real', 'input_imag', 'target_real', 'target_imag'])
-NUM_RETRY = 100
-NUM_EPOCH = 1000
-TRAIN_SET_SIZE = 8
+from DA.Constructor import construct
+from DA.Parameters import Parameters, Batch, TRAIN_SET_SIZE, NUM_RETRY, NUM_EPOCH
+from SoundPreprocess.Preprocessing import ParsedSound
+from Utils.Visualizer import new_figure, update_figure
+from Utils.Wrappers import timing
 
 
 @timing
@@ -34,20 +28,21 @@ def epoch(batches, train_set_size, train_net, valid_net):
     for batch in train_set:
         train_error += train_net(batch.input_real, batch.input_imag, batch.target_real, batch.target_imag)
     train_error /= train_size
-
+    print(train_error)
     for batch in valid_set:
         valid_error += valid_net(batch.input_real, batch.input_imag, batch.target_real, batch.target_imag)
     valid_error /= valid_size
-
+    print(valid_error)
     return train_error, valid_error
 
 
 @timing
 def retry(batches, params, retry, train_set_size, train_net, valid_net):
     # params = reinit_params(params)
+    plot, axis = new_figure(retry)
     for ep in range(NUM_EPOCH):
-        err = epoch(batches, train_set_size, train_net, valid_net)
-        print(err)
+        terr, verr = epoch(batches, train_set_size, train_net, valid_net)
+        update_figure(plot, axis, ep, verr)
         if ep % 100 == 0:
             with open('new_params_r{0}_e{1}'.format(retry, ep), 'wb') as fout:
                 c_pickle.dump(params, fout)

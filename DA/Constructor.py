@@ -1,8 +1,9 @@
 import theano.tensor as T
-from lasagne.updates import nesterov_momentum
-from theano import function
 from lasagne.layers import ConcatLayer, InputLayer, DenseLayer, get_output, get_all_params
 from lasagne.nonlinearities import tanh
+from lasagne.updates import nesterov_momentum
+from theano import function
+
 from DA.Parameters import Parameters
 from Utils.Wrappers import timing
 

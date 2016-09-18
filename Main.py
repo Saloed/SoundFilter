@@ -1,12 +1,14 @@
-from DA.Parameters import Parameters
-from DA.Train import train
-from SoundPreprocess.Preprocessing import change_to_wav, process_wav_file, write_wav_file
-import theano
 import gc
 
-theano.config.mode = 'FAST_COMPILE'
+import theano
+
+from DA.Parameters import Parameters
+from DA.Train import train
+from SoundPreprocess.Preprocessing import process_wav_file
+
+theano.config.mode = 'FAST_RUN'
 theano.config.floatX = 'float32'
-theano.config.exception_verbosity = 'high'
+# theano.config.exception_verbosity = 'high'
 
 
 def main():
