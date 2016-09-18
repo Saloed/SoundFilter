@@ -19,7 +19,7 @@ def create_batches(learn_1: ParsedSound, learn_2: ParsedSound):
 
 def debug_print(i, err):
     if i % 100 == 0:
-        print(err)
+        print("Batch {0}\terr: {1}".format(i, err))
 
 
 @timing
@@ -50,11 +50,11 @@ def epoch(batches, train_set_size, train_net, valid_net):
 @timing
 def retry(batches, params, retry, train_set_size, train_net, valid_net):
     # params = reinit_params(params)
-    axis, plot = new_figure(retry)
+    # axis, plot = new_figure(retry)
 
     for ep in range(NUM_EPOCH):
         terr, verr = epoch(batches, train_set_size, train_net, valid_net)
-        update_figure(plot, axis, ep, verr)
+        # update_figure(plot, axis, ep, verr)
         if ep % 100 == 0:
             with open('new_params_r{0}_e{1}'.format(retry, ep), 'wb') as fout:
                 c_pickle.dump(params, fout)

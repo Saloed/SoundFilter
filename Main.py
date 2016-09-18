@@ -4,7 +4,7 @@ import theano
 
 from DA.Parameters import Parameters
 from DA.Train import train
-from SoundPreprocess.Preprocessing import process_wav_file
+from SoundPreprocess.Preprocessing import process_wav_file, write_wav_file
 
 theano.config.mode = 'FAST_RUN'
 theano.config.floatX = 'float32'
@@ -26,7 +26,7 @@ def main():
         raise Exception("Learn sounds lengths are different")
 
     part_size = learn_1_ps.part_size
-    parameters = Parameters(in_out_size=part_size, learn_rate=0.025)
+    parameters = Parameters(in_out_size=part_size, learn_rate=0.03)
     train(parameters, learn_1_ps, learn_2_ps)
 
     # write_wav_file(learn_1_ps)
