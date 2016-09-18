@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plotter
 import numpy as np
-
 from DA.Parameters import NUM_EPOCH
 
 

@@ -18,5 +18,3 @@ class Parameters:
         self.weights = weights
         self.biases = biases
         self.learn_rate = learn_rate
-
-        self.params = None

@@ -3,7 +3,7 @@ from lasagne.layers import ConcatLayer, InputLayer, DenseLayer, get_output, get_
 from lasagne.nonlinearities import tanh
 from lasagne.updates import nesterov_momentum
 from theano import function
-
+from theano.printing import pydotprint
 from DA.Parameters import Parameters
 from Utils.Wrappers import timing
 
@@ -18,15 +18,25 @@ def construct(params: Parameters, is_learn, is_validation):
     r_in = InputLayer([params.in_out_size], real_input, 'r_in')
     i_in = InputLayer([params.in_out_size], imag_input, 'i_in')
 
-    r_in_layer = DenseLayer(r_in, params.in_out_size, nonlinearity=tanh, name='r_in_layer')
-    i_in_layer = DenseLayer(i_in, params.in_out_size, nonlinearity=tanh, name='i_in_layer')
+    r_in_layer = DenseLayer(r_in, params.in_out_size,
+                            W=params.weights['w_r_in'], b=params.biases['b_r_in'],
+                            nonlinearity=tanh, name='r_in_layer')
+    i_in_layer = DenseLayer(i_in, params.in_out_size,
+                            W=params.weights['w_i_in'], b=params.biases['b_i_in'],
+                            nonlinearity=tanh, name='i_in_layer')
 
     c_layer = ConcatLayer([r_in_layer, i_in_layer], axis=0)
 
-    h_layer = DenseLayer(c_layer, params.hidden_size, nonlinearity=tanh, name='h_layer')
+    h_layer = DenseLayer(c_layer, params.hidden_size,
+                         W=params.weights['w_h'], b=params.biases['b_h'],
+                         nonlinearity=tanh, name='h_layer')
 
-    r_out_layer = DenseLayer(h_layer, params.in_out_size, nonlinearity=tanh, name='i_out_layer')
-    i_out_layer = DenseLayer(h_layer, params.in_out_size, nonlinearity=tanh, name='i_out_layer')
+    r_out_layer = DenseLayer(h_layer, params.in_out_size,
+                             W=params.weights['w_r_out'], b=params.biases['b_r_out'],
+                             nonlinearity=tanh, name='i_out_layer')
+    i_out_layer = DenseLayer(h_layer, params.in_out_size,
+                             W=params.weights['w_i_out'], b=params.biases['b_i_out'],
+                             nonlinearity=tanh, name='i_out_layer')
 
     # T.nnet.sigmoid(T.dot(real_input, params.weights['w_r_in']) + params.biases['b_r_in'])
     # T.nnet.sigmoid(T.dot(imag_input, params.weights['w_i_in']) + params.biases['b_i_in'])
@@ -43,11 +53,9 @@ def construct(params: Parameters, is_learn, is_validation):
     cost_r = T.std(r_out - real_target)
     cost_i = T.std(i_out - imag_target)
     cost = T.sqrt(T.sqr(cost_r) + T.sqr(cost_i))
-
+    # pydotprint(cost, 'cost_graph.png')
     if is_learn:
         if not is_validation:
-            params.params = used_params
-
             updates = nesterov_momentum(cost, used_params, params.learn_rate)
             # upd_params = []
             # upd_params.extend(params.weights.values())
