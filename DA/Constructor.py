@@ -1,6 +1,6 @@
 import theano.tensor as T
 from lasagne.layers import ConcatLayer, InputLayer, DenseLayer, get_output, get_all_params
-from lasagne.nonlinearities import tanh
+from lasagne.nonlinearities import tanh, identity
 from lasagne.updates import nesterov_momentum
 from theano import function
 from theano.printing import pydotprint
@@ -33,10 +33,10 @@ def construct(params: Parameters, is_learn, is_validation):
 
     r_out_layer = DenseLayer(h_layer, params.in_out_size,
                              W=params.weights['w_r_out'], b=params.biases['b_r_out'],
-                             nonlinearity=tanh, name='i_out_layer')
+                             nonlinearity=identity, name='i_out_layer')
     i_out_layer = DenseLayer(h_layer, params.in_out_size,
                              W=params.weights['w_i_out'], b=params.biases['b_i_out'],
-                             nonlinearity=tanh, name='i_out_layer')
+                             nonlinearity=identity, name='i_out_layer')
 
     # T.nnet.sigmoid(T.dot(real_input, params.weights['w_r_in']) + params.biases['b_r_in'])
     # T.nnet.sigmoid(T.dot(imag_input, params.weights['w_i_in']) + params.biases['b_i_in'])
