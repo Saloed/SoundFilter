@@ -1,7 +1,7 @@
 import theano.tensor as T
-from lasagne.layers import ConcatLayer, InputLayer, DenseLayer, get_output, get_all_params
+from lasagne.layers import *
 from lasagne.nonlinearities import tanh, identity
-from lasagne.updates import nesterov_momentum
+from lasagne.updates import nesterov_momentum, adadelta
 from theano import function
 from theano.printing import pydotprint
 from DA.Parameters import Parameters
@@ -10,33 +10,23 @@ from Utils.Wrappers import timing
 
 @timing
 def construct(params: Parameters, is_learn, is_validation):
-    real_input = T.fvector('r_in')
-    imag_input = T.fvector('i_in')
-    real_target = T.fvector('r_tar')
-    imag_target = T.fvector('i_tar')
+    input = T.fvector('IN')
+    target = T.fvector('TAR')
 
-    r_in = InputLayer([params.in_out_size], real_input, 'r_in')
-    i_in = InputLayer([params.in_out_size], imag_input, 'i_in')
+    in_layer = InputLayer([params.in_out_size], input, 'in')
 
-    r_in_layer = DenseLayer(r_in, params.in_out_size,
-                            W=params.weights['w_r_in'], b=params.biases['b_r_in'],
-                            nonlinearity=tanh, name='r_in_layer')
-    i_in_layer = DenseLayer(i_in, params.in_out_size,
-                            W=params.weights['w_i_in'], b=params.biases['b_i_in'],
-                            nonlinearity=tanh, name='i_in_layer')
-
-    c_layer = ConcatLayer([r_in_layer, i_in_layer], axis=0)
-
-    h_layer = DenseLayer(c_layer, params.hidden_size,
-                         W=params.weights['w_h'], b=params.biases['b_h'],
-                         nonlinearity=tanh, name='h_layer')
-
-    r_out_layer = DenseLayer(h_layer, params.in_out_size,
-                             W=params.weights['w_r_out'], b=params.biases['b_r_out'],
-                             nonlinearity=identity, name='i_out_layer')
-    i_out_layer = DenseLayer(h_layer, params.in_out_size,
-                             W=params.weights['w_i_out'], b=params.biases['b_i_out'],
-                             nonlinearity=identity, name='i_out_layer')
+    h1_layer = DenseLayer(in_layer, params.hidden_size,
+                          W=params.weights['w_h_in'], b=params.biases['b_h_in'],
+                          nonlinearity=tanh,
+                          name='in_hidden')
+    h2_layer = DenseLayer(h1_layer, params.hidden_size,
+                          W=params.weights['w_h_out'], b=params.biases['b_h_out'],
+                          nonlinearity=tanh,
+                          name='out_hidden')
+    out_layer = DenseLayer(h2_layer, params.in_out_size,
+                           W=params.weights['w_out'], b=params.biases['b_out'],
+                           nonlinearity=tanh,
+                           name='out')
 
     # T.nnet.sigmoid(T.dot(real_input, params.weights['w_r_in']) + params.biases['b_r_in'])
     # T.nnet.sigmoid(T.dot(imag_input, params.weights['w_i_in']) + params.biases['b_i_in'])
@@ -47,16 +37,13 @@ def construct(params: Parameters, is_learn, is_validation):
     # T.nnet.sigmoid(T.dot(h_layer, params.weights['w_r_out']) + params.biases['b_r_out'])
     # T.nnet.sigmoid(T.dot(h_layer, params.weights['w_i_out']) + params.biases['b_i_out'])
 
-    r_out, i_out = get_output([r_out_layer, i_out_layer])
-    used_params = get_all_params([r_out_layer, i_out_layer])
-
-    cost_r = T.std(r_out - real_target)
-    cost_i = T.std(i_out - imag_target)
-    cost = T.sqrt(T.sqr(cost_r) + T.sqr(cost_i))
+    out = get_output(out_layer)
+    used_params = get_all_params(out_layer)
+    cost = T.std(out - target)
     # pydotprint(cost, 'cost_graph.png')
     if is_learn:
         if not is_validation:
-            updates = nesterov_momentum(cost, used_params, params.learn_rate)
+            updates = adadelta(cost, used_params)
             # upd_params = []
             # upd_params.extend(params.weights.values())
             # upd_params.extend(params.biases.values())
@@ -65,9 +52,9 @@ def construct(params: Parameters, is_learn, is_validation):
             #     (param, param - params.learn_rate * gparam)
             #     for param, gparam in zip(upd_params, grads)
             #     ]
-            return function([real_input, imag_input, real_target, imag_target], outputs=cost, updates=updates)
+            return function([input, target], outputs=cost, updates=updates)
         else:
-            return function([real_input, imag_input, real_target, imag_target], outputs=cost)
+            return function([input, target], outputs=cost)
 
     else:
-        return function([real_input, imag_input], outputs=[r_out, i_out])
+        return function([input], outputs=out)

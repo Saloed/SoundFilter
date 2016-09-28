@@ -53,28 +53,20 @@ randomizer = np.random.RandomState(314)
 
 
 def reset_params(params: Parameters):
-    w_r_in = GlorotUniform()
-    w_i_in = GlorotUniform()
-    w_h = GlorotUniform()
-    w_r_out = GlorotUniform()
-    w_i_out = GlorotUniform()
+    w_h_in = GlorotUniform()
+    w_h_out = GlorotUniform()
+    w_out = GlorotUniform()
 
-    b_r_in = Constant(0.)
-    b_i_in = Constant(0.)
-    b_h = Constant(0.)
-    b_r_out = Constant(0.)
-    b_i_out = Constant(0.)
+    b_h_in = Constant(0.)
+    b_h_out = Constant(0.)
+    b_out = Constant(0.)
 
-    params.weights['w_r_in'] = w_r_in
-    params.weights['w_i_in'] = w_i_in
-    params.weights['w_h'] = w_h
-    params.weights['w_r_out'] = w_r_out
-    params.weights['w_i_out'] = w_i_out
+    params.weights['w_h_in'] = w_h_in
+    params.weights['w_h_out'] = w_h_out
+    params.weights['w_out'] = w_out
 
-    params.biases['b_r_in'] = b_r_in
-    params.biases['b_i_in'] = b_i_in
-    params.biases['b_h'] = b_h
-    params.biases['b_r_out'] = b_r_out
-    params.biases['b_i_out'] = b_i_out
+    params.biases['b_h_in'] = b_h_in
+    params.biases['b_h_out'] = b_h_out
+    params.biases['b_out'] = b_out
 
     return params
