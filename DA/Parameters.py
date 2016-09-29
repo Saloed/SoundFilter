@@ -1,6 +1,6 @@
 from collections import namedtuple
 
-Batch = namedtuple('Batch', ['input_real', 'input_imag', 'target_real', 'target_imag'])
+Batch = namedtuple('Batch', ['input', 'target'])
 NUM_RETRY = 100
 NUM_EPOCH = 1000
 TRAIN_SET_SIZE = 8
