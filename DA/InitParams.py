@@ -54,18 +54,22 @@ randomizer = np.random.RandomState(314)
 
 def reset_params(params: Parameters):
     w_h_in = GlorotUniform()
+    w_h = GlorotUniform()
     w_h_out = GlorotUniform()
     w_out = GlorotUniform()
 
     b_h_in = Constant(0.)
+    b_h = Constant(0.)
     b_h_out = Constant(0.)
     b_out = Constant(0.)
 
     params.weights['w_h_in'] = w_h_in
+    params.weights['w_h'] = w_h
     params.weights['w_h_out'] = w_h_out
     params.weights['w_out'] = w_out
 
     params.biases['b_h_in'] = b_h_in
+    params.biases['b_h'] = b_h
     params.biases['b_h_out'] = b_h_out
     params.biases['b_out'] = b_out
 
