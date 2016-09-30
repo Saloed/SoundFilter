@@ -21,7 +21,11 @@ def construct(params: Parameters, is_learn, is_validation):
                           nonlinearity=tanh,
                           name='in_hidden')
     hh_layer = DenseLayer(h1_layer, params.hidden_size,
-                          W=params.weights['w_h'], b=params.biases['b_h'],
+                          W=params.weights['w_h_1'], b=params.biases['b_h_1'],
+                          nonlinearity=tanh,
+                          name='hidden')
+    hh_layer = DenseLayer(hh_layer, params.hidden_size,
+                          W=params.weights['w_h_2'], b=params.biases['b_h_2'],
                           nonlinearity=tanh,
                           name='hidden')
     h2_layer = DenseLayer(hh_layer, params.hidden_size,

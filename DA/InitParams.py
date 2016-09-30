@@ -7,70 +7,74 @@ from Utils.Wrappers import timing
 randomizer = np.random.RandomState(314)
 
 
-# def reshape_and_cast(param, shape, dtype='float32'):
-#     return np.asarray(param.reshape(shape),
-#                       dtype=dtype)
-#
-#
-# def rand_param(shape_0, shape_1=1):
-#     size = shape_0 * shape_1
-#     param=GlorotUniform()
-#     param = randomizer.uniform(-10.0, 10.0, size)
-#     if shape_1 != 1:
-#         param = reshape_and_cast(param, (shape_0, shape_1))
-#     else:
-#         param = reshape_and_cast(param, shape_0)
-#     return param
-#
-#
-# @timing
-# def initialize(params: Parameters):
-#     w_r_in = rand_param(params.in_out_size, params.in_out_size)
-#     w_i_in = rand_param(params.in_out_size, params.in_out_size)
-#     w_h = rand_param(params.hidden_size, params.hidden_size)
-#     w_r_out = rand_param(params.hidden_size, params.in_out_size)
-#     w_i_out = rand_param(params.hidden_size, params.in_out_size)
-#
-#     b_r_in = rand_param(params.in_out_size)
-#     b_i_in = rand_param(params.in_out_size)
-#     b_h = rand_param(params.hidden_size)
-#     b_r_out = rand_param(params.in_out_size)
-#     b_i_out = rand_param(params.in_out_size)
-#
-#     params.weights['w_r_in'] = shared(w_r_in, 'w_r_in')
-#     params.weights['w_i_in'] = shared(w_i_in, 'w_i_in')
-#     params.weights['w_h'] = shared(w_h, 'w_h')
-#     params.weights['w_r_out'] = shared(w_r_out, 'w_r_out')
-#     params.weights['w_i_out'] = shared(w_i_out, 'w_i_out')
-#
-#     params.biases['b_r_in'] = shared(b_r_in, 'b_r_in')
-#     params.biases['b_i_in'] = shared(b_i_in, 'b_i_in')
-#     params.biases['b_h'] = shared(b_h, 'b_h')
-#     params.biases['b_r_out'] = shared(b_r_out, 'b_r_out')
-#     params.biases['b_i_out'] = shared(b_i_out, 'b_i_out')
-#
-#     return params
+def reshape_and_cast(param, shape, dtype='float32'):
+    return np.asarray(param.reshape(shape),
+                      dtype=dtype)
 
 
-def reset_params(params: Parameters):
-    w_h_in = GlorotUniform()
-    w_h = GlorotUniform()
-    w_h_out = GlorotUniform()
-    w_out = GlorotUniform()
+def rand_param(shape_0, shape_1=1):
+    size = shape_0 * shape_1
+    param = randomizer.uniform(-1.0, 1.0, size)
+    if shape_1 != 1:
+        param = reshape_and_cast(param, (shape_0, shape_1))
+    else:
+        param = reshape_and_cast(param, shape_0)
+    return shared(param)
 
-    b_h_in = Constant(0.)
-    b_h = Constant(0.)
-    b_h_out = Constant(0.)
-    b_out = Constant(0.)
+
+@timing
+def initialize(params: Parameters):
+
+    w_h_in = rand_param(params.in_out_size, params.hidden_size)
+    w_h_1 = rand_param(params.hidden_size, params.hidden_size)
+    w_h_2 = rand_param(params.hidden_size, params.hidden_size)
+    w_h_out = rand_param(params.hidden_size, params.hidden_size)
+    w_out = rand_param(params.hidden_size, params.in_out_size)
+
+    b_h_in = rand_param(params.hidden_size)
+    b_h_1 = rand_param(params.hidden_size)
+    b_h_2 = rand_param(params.hidden_size)
+    b_h_out = rand_param(params.hidden_size)
+    b_out = rand_param(params.in_out_size)
 
     params.weights['w_h_in'] = w_h_in
-    params.weights['w_h'] = w_h
+    params.weights['w_h_1'] = w_h_1
+    params.weights['w_h_2'] = w_h_2
     params.weights['w_h_out'] = w_h_out
     params.weights['w_out'] = w_out
 
     params.biases['b_h_in'] = b_h_in
-    params.biases['b_h'] = b_h
+    params.biases['b_h_1'] = b_h_1
+    params.biases['b_h_2'] = b_h_2
     params.biases['b_h_out'] = b_h_out
     params.biases['b_out'] = b_out
+
+    return params
+
+
+def reset_params(params: Parameters):
+    w_h_in = rand_param(params.in_out_size, params.hidden_size)
+    w_h_1 = rand_param(params.hidden_size, params.hidden_size)
+    w_h_2 = rand_param(params.hidden_size, params.hidden_size)
+    w_h_out = rand_param(params.hidden_size, params.hidden_size)
+    w_out = rand_param(params.hidden_size, params.in_out_size)
+
+    b_h_in = rand_param(params.hidden_size)
+    b_h_1 = rand_param(params.hidden_size)
+    b_h_2 = rand_param(params.hidden_size)
+    b_h_out = rand_param(params.hidden_size)
+    b_out = rand_param(params.in_out_size)
+
+    params.weights['w_h_in'].set_value(w_h_in.get_value())
+    params.weights['w_h_1'].set_value(w_h_1.get_value())
+    params.weights['w_h_2'].set_value(w_h_2.get_value())
+    params.weights['w_h_out'].set_value(w_h_out.get_value())
+    params.weights['w_out'].set_value(w_out.get_value())
+
+    params.biases['b_h_in'].set_value(b_h_in.get_value())
+    params.biases['b_h_1'].set_value(b_h_1.get_value())
+    params.biases['b_h_2'].set_value(b_h_2.get_value())
+    params.biases['b_h_out'].set_value(b_h_out.get_value())
+    params.biases['b_out'].set_value(b_out.get_value())
 
     return params
